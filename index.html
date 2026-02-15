@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Tarabalam Calculator - Check your astrological alignment with auto-detecting Nakshatra">
+    <meta name="theme-color" content="#2c3e50">
+    <title>Tarabalam Calculator | CosmosGuide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .date-display {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .status-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.5s ease;
+        }
+
+        .status-banner.success {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .status-banner.warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f44336 100%);
+        }
+
+        .status-banner.error {
+            background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            width: 100%;
+            padding: 14px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background-color: #fff;
+            color: #333;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:active {
+            background-color: #e0e0e0;
+        }
+
+        #result {
+            display: none;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 5px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-good {
+            background-color: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+
+        .result-bad {
+            background-color: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        .result-neutral {
+            background-color: #fff3e0;
+            border-left-color: #ff9800;
+        }
+
+        .result-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        #taraName {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+
+        #taraDesc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .info-section {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-section strong {
+            color: #2c3e50;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #25D366;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            .card {
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            button, select {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>✨ Tarabalam Checker</h1>
+        <p>Check your astrological alignment today</p>
+        <div class="date-display" id="dateDisplay">Loading date...</div>
+    </div>
+
+    <div class="card">
+        <div class="status-banner" id="statusBanner">
+            <span class="spinner"></span>
+            <span id="statusText">Fetching today's Nakshatra...</span>
+        </div>
+
+        <div class="form-group">
+            <label for="userStar">Your Birth Star (Janma Nakshatra)</label>
+            <select id="userStar"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="dayStar">Today's Star</label>
+            <select id="dayStar" disabled></select>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="calculateTarabalam()">Check Alignment</button>
+            <button class="btn-secondary" onclick="resetForm()">Reset</button>
+        </div>
+
+        <div id="result">
+            <div class="result-icon" id="resultIcon"></div>
+            <div id="taraName"></div>
+            <div id="taraDesc"></div>
+        </div>
+
+        <div class="info-section">
+            <strong>💡 How it works:</strong><br>
+            Select your birth star. Today's star is auto-detected from the Hindu Calendar. The result shows whether today is auspicious for your activities.
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>For further details or consultation contact CosmosGuide</p>
+        <a href="https://wa.me/919019161946">📱 +91-9019161946 on WhatsApp</a>
+    </div>
+</div>
+
+<script>
+    const nakshatras = [
+        "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
+        "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
+        "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+    ];
+
+    const taraData = {
+        1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Mixed results. Focus on routine work; avoid major new health treatments or big financial risks." },
+        2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Wealth and Prosperity. Excellent for new investments, business deals, and buying assets." },
+        3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Danger/Obstacles. Avoid starting new journeys or high-stakes activities. Be cautious." },
+        4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "Prosperity/Protection. Very auspicious for travel, celebrations, and signing contracts." },
+        5: { name: "Pratyak Tara", type: "bad", icon: "🚧", desc: "Hurdles. Minor delays likely. Not ideal for important meetings or new initiatives." },
+        6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Achievement. Great for spiritual practices, learning, and finishing pending tasks." },
+        7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "Danger/Accidents. Critical. Avoid all auspicious activities and major life changes today." },
+        8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "Friendly. Good for socializing, meeting friends, and collaborative projects." },
+        0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "Great Friend. Highly auspicious for almost everything. Success is likely." }
+    };
+
+    const userSelect = document.getElementById('userStar');
+    const daySelect = document.getElementById('dayStar');
+    const statusBanner = document.getElementById('statusBanner');
+    const statusText = document.getElementById('statusText');
+    const dateDisplay = document.getElementById('dateDisplay');
+
+    nakshatras.forEach((n, i) => {
+        userSelect.options[userSelect.options.length] = new Option(n, i + 1);
+        daySelect.options[daySelect.options.length] = new Option(n, i + 1);
+    });
+
+    userSelect.value = 1;
+
+    function displayDate() {
+        const today = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateString = today.toLocaleDateString('en-US', options);
+        dateDisplay.textContent = `📅 ${dateString}`;
+    }
+
+    displayDate();
+
+    async function fetchTodaysNakshatra() {
+        try {
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            const response = await fetch(`https://api.drikpanchang.com/v2/panchang?date=${dateStr}&lat=28.6139&lon=77.2090`);
+            
+            if (!response.ok) throw new Error('API Error');
+            
+            const data = await response.json();
+            
+            if (data.panchang && data.panchang.nakshatra) {
+                const nakshatraName = data.panchang.nakshatra;
+                const nakshatraIndex = nakshatras.findIndex(n => n.toLowerCase() === nakshatraName.toLowerCase());
+                
+                if (nakshatraIndex !== -1) {
+                    daySelect.value = nakshatraIndex + 1;
+                    updateStatus('success', `✓ Today's Nakshatra: ${nakshatraName}`);
+                    return;
+                }
+            }
+            throw new Error('Invalid data');
+        } catch (error) {
+            console.log('API fetch error, using fallback');
+            useFallbackNakshatra();
+        }
+    }
+
+    function useFallbackNakshatra() {
+        const today = new Date();
+        const dayOfMonth = today.getDate();
+        const monthOfYear = today.getMonth();
+        const calculatedIndex = ((dayOfMonth + monthOfYear) % 27);
+        
+        daySelect.value = calculatedIndex || 1;
+        updateStatus('warning', '⚙️ Using calculated Nakshatra (API unavailable)');
+    }
+
+    function updateStatus(type, message) {
+        statusBanner.className = `status-banner ${type}`;
+        statusText.textContent = message;
+        daySelect.disabled = false;
+    }
+
+    function calculateTarabalam() {
+        const u = parseInt(userSelect.value);
+        const d = parseInt(daySelect.value);
+
+        let diff = (d - u + 1);
+        if (diff <= 0) diff += 27;
+        let score = diff % 9;
+
+        const resultDiv = document.getElementById('result');
+        const tara = taraData[score];
+
+        resultDiv.className = `result-${tara.type}`;
+        document.getElementById('resultIcon').innerText = tara.icon;
+        document.getElementById('taraName').innerText = tara.name;
+        document.getElementById('taraDesc').innerText = tara.desc;
+
+        resultDiv.style.display = 'block';
+        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function resetForm() {
+        userSelect.value = 1;
+        document.getElementById('result').style.display = 'none';
+    }
+
+    window.addEventListener('load', () => {
+        fetchTodaysNakshatra();
+    });
+</script>
+
+</body>
+</html>
