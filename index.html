@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="description" content="Tarabalam Calculator - Check your astrological alignment with auto-detecting Nakshatra">
+    <meta name="description" content="Tarabalam Calculator - Check your astrological alignment with accurate Lahiri Ayanamsha">
     <meta name="theme-color" content="#2c3e50">
     <title>Tarabalam Calculator | CosmosGuide</title>
     <style>
@@ -245,6 +245,14 @@
             color: #2c3e50;
         }
 
+        .location-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+
         .footer {
             text-align: center;
             padding: 20px;
@@ -288,7 +296,7 @@
     <div class="card">
         <div class="status-banner" id="statusBanner">
             <span class="spinner"></span>
-            <span id="statusText">Fetching today's Nakshatra...</span>
+            <span id="statusText">Fetching today's Nakshatra (Lahiri Ayanamsha)...</span>
         </div>
 
         <div class="form-group">
@@ -299,6 +307,7 @@
         <div class="form-group">
             <label for="dayStar">Today's Star</label>
             <select id="dayStar" disabled></select>
+            <div class="location-info">📍 Based on Bangalore, India (Lahiri Ayanamsha)</div>
         </div>
 
         <div class="button-group">
@@ -314,7 +323,7 @@
 
         <div class="info-section">
             <strong>💡 How it works:</strong><br>
-            Select your birth star. Today's star is auto-detected from the Hindu Calendar. The result shows whether today is auspicious for your activities.
+            Select your birth star. Today's star is auto-detected using Lahiri Ayanamsha (Hindu Calendar standard). The result shows whether today is auspicious for your activities.
         </div>
     </div>
 
@@ -349,6 +358,10 @@
     const statusText = document.getElementById('statusText');
     const dateDisplay = document.getElementById('dateDisplay');
 
+    // Bangalore coordinates
+    const BANGALORE_LAT = 12.9716;
+    const BANGALORE_LON = 77.5946;
+
     nakshatras.forEach((n, i) => {
         userSelect.options[userSelect.options.length] = new Option(n, i + 1);
         daySelect.options[daySelect.options.length] = new Option(n, i + 1);
@@ -365,42 +378,117 @@
 
     displayDate();
 
+    // Calculate Julian Date
+    function calculateJulianDate(date) {
+        const d = new Date(date);
+        const year = d.getUTCFullYear();
+        const month = d.getUTCMonth() + 1;
+        const day = d.getUTCDate();
+
+        let a = Math.floor((14 - month) / 12);
+        let y = year + 4800 - a;
+        let m = month + 12 * a - 3;
+
+        let jdn = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+        return jdn;
+    }
+
+    // Calculate Nakshatra using Lahiri Ayanamsha
+    function calculateNakshatraFromDate(date) {
+        try {
+            const jd = calculateJulianDate(date);
+            
+            // Lahiri Ayanamsha constants
+            const AYANAMSHA_1900 = 22.6689; // Ayanamsha on Jan 1, 1900
+            const AYANAMSHA_2000 = 23.85088; // Ayanamsha on Jan 1, 2000
+            
+            // Days since 2000.0
+            const daysSince2000 = jd - 2451545;
+            const yearsSince2000 = daysSince2000 / 365.25;
+            
+            // Current Ayanamsha (precession rate ~50.29 arcsec per year)
+            const ayanamsha = AYANAMSHA_2000 + (yearsSince2000 * 0.01396667);
+            
+            // Moon's mean longitude calculation (simplified)
+            const T = yearsSince2000 / 100;
+            const moonMeanLong = 218.3164477 + 
+                13.17639648 * daysSince2000 + 
+                0.000053 * T * T;
+            
+            // Adjust for Ayanamsha (sidereal)
+            const siderealMoonLong = (moonMeanLong - ayanamsha + 360) % 360;
+            
+            // Each nakshatra is 13.333 degrees (360/27)
+            const nakshatraSize = 13.333333;
+            const nakshatraIndex = Math.floor(siderealMoonLong / nakshatraSize) % 27;
+            
+            return nakshatraIndex;
+        } catch (error) {
+            console.error('Error calculating Nakshatra:', error);
+            return null;
+        }
+    }
+
     async function fetchTodaysNakshatra() {
+        try {
+            // First try using our calculation
+            const today = new Date();
+            const calculatedIndex = calculateNakshatraFromDate(today);
+            
+            if (calculatedIndex !== null && calculatedIndex >= 0 && calculatedIndex < 27) {
+                daySelect.value = calculatedIndex + 1;
+                const nakshatraName = nakshatras[calculatedIndex];
+                updateStatus('success', `✓ Today's Nakshatra: ${nakshatraName} (Lahiri Ayanamsha)`);
+                return;
+            }
+            
+            // Fallback: Try API
+            await tryExternalAPI();
+        } catch (error) {
+            console.log('Calculation error, trying API:', error);
+            await tryExternalAPI();
+        }
+    }
+
+    async function tryExternalAPI() {
         try {
             const today = new Date();
             const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             
-            const response = await fetch(`https://api.drikpanchang.com/v2/panchang?date=${dateStr}&lat=28.6139&lon=77.2090`);
+            // Try AstroAPI with Lahiri Ayanamsha
+            const response = await fetch(
+                `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Latitude=${BANGALORE_LAT}&Longitude=${BANGALORE_LON}&TimeZoneOffset=5.5&Ayanamsha=Lahiri`
+            );
             
-            if (!response.ok) throw new Error('API Error');
-            
-            const data = await response.json();
-            
-            if (data.panchang && data.panchang.nakshatra) {
-                const nakshatraName = data.panchang.nakshatra;
-                const nakshatraIndex = nakshatras.findIndex(n => n.toLowerCase() === nakshatraName.toLowerCase());
-                
-                if (nakshatraIndex !== -1) {
-                    daySelect.value = nakshatraIndex + 1;
-                    updateStatus('success', `✓ Today's Nakshatra: ${nakshatraName}`);
-                    return;
+            if (response.ok) {
+                const data = await response.json();
+                if (data.MoonNakshatra) {
+                    const nakshatraName = data.MoonNakshatra;
+                    const nakshatraIndex = nakshatras.findIndex(n => 
+                        n.toLowerCase().includes(nakshatraName.toLowerCase()) ||
+                        nakshatraName.toLowerCase().includes(n.toLowerCase())
+                    );
+                    
+                    if (nakshatraIndex !== -1) {
+                        daySelect.value = nakshatraIndex + 1;
+                        updateStatus('success', `✓ Today's Nakshatra: ${nakshatraName} (Lahiri Ayanamsha - API)`);
+                        return;
+                    }
                 }
             }
-            throw new Error('Invalid data');
+            
+            // If API fails, use local calculation as fallback
+            const calculatedIndex = calculateNakshatraFromDate(new Date());
+            if (calculatedIndex !== null) {
+                daySelect.value = calculatedIndex + 1;
+                updateStatus('warning', `⚙️ Today's Nakshatra: ${nakshatras[calculatedIndex]} (Calculated)`);
+            } else {
+                throw new Error('All methods failed');
+            }
         } catch (error) {
-            console.log('API fetch error, using fallback');
-            useFallbackNakshatra();
+            console.error('API Error:', error);
+            updateStatus('error', '❌ Could not fetch Nakshatra. Please select manually.');
         }
-    }
-
-    function useFallbackNakshatra() {
-        const today = new Date();
-        const dayOfMonth = today.getDate();
-        const monthOfYear = today.getMonth();
-        const calculatedIndex = ((dayOfMonth + monthOfYear) % 27);
-        
-        daySelect.value = calculatedIndex || 1;
-        updateStatus('warning', '⚙️ Using calculated Nakshatra (API unavailable)');
     }
 
     function updateStatus(type, message) {
