@@ -3,259 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarabalam Calculator | CosmosGuide</title>
+    <title>CosmosGuide | Live Tarabalam</title>
     <style>
-        :root {
-            --primary-grad: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            --card-bg: #ffffff;
-            --text-main: #2c3e50;
-        }
-
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            color: var(--text-main);
             padding: 20px;
         }
 
-        /* Branding Header */
-        .brand-section {
-            text-align: center;
-            margin-bottom: 25px;
-            color: white;
-        }
+        /* Branding */
+        .brand-container { text-align: center; margin-bottom: 20px; color: white; }
+        .logo { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px; border: 2px solid gold; }
+        .brand-name { font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 1px; }
 
-        .logo {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            margin-bottom: 10px;
-        }
-
-        .brand-name {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            margin: 0;
-            text-transform: uppercase;
-        }
-
-        /* App Card */
+        /* Card */
         .card {
-            background: var(--card-bg);
+            background: white;
             width: 100%;
-            max-width: 480px;
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 450px;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             box-sizing: border-box;
         }
 
         .status-banner {
-            padding: 12px;
-            border-radius: 12px;
+            padding: 10px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 600;
             text-align: center;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            font-weight: bold;
         }
+        .live { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .loading { background: #fff3e0; color: #ef6c00; }
 
-        .status-live { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-        .status-error { background: #fdecea; color: #af2c2c; border: 1px solid #f5c2c2; }
-        .status-sync { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
-
-        label {
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #7f8c8d;
-            display: block;
-            margin-bottom: 8px;
-        }
-
+        label { font-weight: bold; font-size: 13px; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        
         select, .display-box {
             width: 100%;
-            padding: 16px;
+            padding: 15px;
             font-size: 18px;
-            border: 2px solid #edf2f7;
-            border-radius: 12px;
-            background: #f8fafc;
+            border: 2px solid #eee;
+            border-radius: 10px;
             margin-bottom: 20px;
             box-sizing: border-box;
         }
 
         .display-box {
-            font-weight: 700;
+            background: #f9f9f9;
             color: #d35400;
+            font-weight: bold;
             text-align: center;
-            min-height: 58px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
+        /* Action Buttons */
         .btn-check {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 16px;
+            background: #6a11cb;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 18px;
-            font-weight: 700;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
+        .btn-check:disabled { background: #ccc; cursor: not-allowed; }
 
-        .btn-check:disabled { background: #cbd5e0; cursor: not-allowed; box-shadow: none; }
+        .refresh-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            line-height: 1;
+        }
 
         #resultArea {
-            margin-top: 25px;
-            padding: 20px;
-            border-radius: 16px;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
             display: none;
             text-align: center;
-            animation: slideUp 0.4s ease-out;
         }
-
-        .res-good { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
-        .res-bad { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
-        .res-neutral { background: #fff3cd; color: #856404; border: 2px solid #ffeeba; }
-
-        .footer-text {
-            margin-top: 25px;
-            font-size: 13px;
-            color: rgba(255,255,255,0.7);
-            text-align: center;
-        }
+        .good { background: #d4edda; border: 1px solid #c3e6cb; }
+        .bad { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .neutral { background: #fff3cd; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
 
-    <div class="brand-section">
-        <img src="icon-192.png" alt="CosmosGuide Logo" class="logo">
+    <div class="brand-container">
+        <img src="icon-192.png" alt="CosmosGuide" class="logo">
         <h1 class="brand-name">CosmosGuide</h1>
-        <p style="margin-top:5px; opacity: 0.8;">Verified Live Tarabalam</p>
+        <div style="font-size: 12px; opacity: 0.8;">LIVE BANGALORE PANCHANG</div>
     </div>
 
     <div class="card">
-        <div id="statusBanner" class="status-banner status-sync">
-            <span>📡 Connecting to Live Sky Data...</span>
-        </div>
+        <div id="status" class="status-banner loading">📡 Connecting to Bangalore Sky...</div>
 
         <label>Your Birth Star</label>
         <select id="userStar"></select>
 
-        <label>Today's Star (Live Bangalore) 🌙</label>
-        <div id="todayStarBox" class="display-box">Waiting for API...</div>
+        <label>Current Star (Live)</label>
+        <div class="display-box">
+            <span id="starDisplay">Checking...</span>
+            <button class="refresh-btn" onclick="fetchLive()" title="Sync Data">🔄</button>
+        </div>
 
-        <button id="checkBtn" class="btn-check" onclick="calculateTarabalam()" disabled>Check Alignment</button>
+        <button id="checkBtn" class="btn-check" onclick="calculate()" disabled>Check Alignment</button>
 
         <div id="resultArea">
-            <div id="resIcon" style="font-size: 48px; margin-bottom: 10px;"></div>
-            <h2 id="resName" style="margin: 0; font-size: 24px;"></h2>
-            <p id="resDesc" style="font-size: 16px; margin-top: 10px;"></p>
+            <div id="resIcon" style="font-size: 40px;"></div>
+            <h3 id="resName" style="margin: 5px 0;"></h3>
+            <p id="resDesc" style="font-size: 14px; margin: 0;"></p>
         </div>
-    </div>
-
-    <div class="footer-text">
-        <p>© CosmosGuide | Data powered by Live Panchang API</p>
     </div>
 
 <script>
     const nakshatras = ["Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"];
 
     const taraData = {
-        1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Body focus. Keep your routine simple and avoid major physical strain today." },
-        2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Wealth & Prosperity. Very auspicious for financial deals and starting new work!" },
-        3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Danger/Obstacles. Be cautious. Avoid high-risk travel or major new investments today." },
-        4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "Well-being. A very safe and protected day for you. Good for family celebrations." },
-        5: { name: "Pratyak Tara", type: "bad", icon: "🚧", desc: "Hurdles. Expect some minor delays. Stay patient and avoid arguments." },
-        6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Success. Excellent for achieving goals and spiritual practices. Efforts will bear fruit." },
-        7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "Cautionary. Not ideal for auspicious events. Rest and prioritize safety today." },
-        8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "Friendly. A happy day for social meetings and getting support from others." },
-        0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "Highly Auspicious. Extremely lucky day! Your plans are likely to succeed beautifully." }
+        1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Focus on routine. Avoid major physical strain." },
+        2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Excellent for money matters and new beginnings." },
+        3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Obstacles possible. Be cautious with travel/risks." },
+        4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "A safe, protected, and auspicious day." },
+        5: { name: "Pratyak Tara", type: "bad", icon: "🚧", desc: "Minor hurdles. Stay patient and avoid conflict." },
+        6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Achievement. Efforts today will bring success." },
+        7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "High caution. Rest and avoid major new tasks." },
+        8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "A friendly and supportive day for social work." },
+        0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "Highly auspicious! Success is very likely." }
     };
 
-    let currentStarIndex = null;
-
-    // Load Dropdown
+    let liveIndex = null;
     const select = document.getElementById('userStar');
     nakshatras.forEach((n, i) => select.options.add(new Option(n, i + 1)));
 
-    async function fetchLivePanchang() {
-        const statusBox = document.getElementById('statusBanner');
-        const starBox = document.getElementById('todayStarBox');
-        const checkBtn = document.getElementById('checkBtn');
+    async function fetchLive() {
+        const status = document.getElementById('status');
+        const display = document.getElementById('starDisplay');
+        const btn = document.getElementById('checkBtn');
+        
+        status.className = "status-banner loading";
+        status.innerText = "📡 Syncing Live Data...";
+        btn.disabled = true;
 
         try {
             const now = new Date();
-            const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-            const timeStr = `${now.getHours()}:${now.getMinutes()}`;
-
-            const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Time=${timeStr}&Latitude=12.9716&Longitude=77.5946&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
+            const date = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+            const time = `${now.getHours()}:${now.getMinutes()}`;
             
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("API_REACH_ERROR");
+            // Explicit Bangalore Coordinates
+            const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${date}&Time=${time}&Latitude=12.9716&Longitude=77.5946&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
             
-            const data = await response.json();
+            const res = await fetch(url);
+            const data = await res.json();
             
             if (data.MoonNakshatra) {
-                const apiStar = data.MoonNakshatra;
-                currentStarIndex = nakshatras.findIndex(n => apiStar.toLowerCase().includes(n.toLowerCase()));
-                
-                if (currentStarIndex !== -1) {
-                    starBox.innerText = nakshatras[currentStarIndex];
-                    statusBox.className = "status-banner status-live";
-                    statusBox.innerHTML = "● Verified Live Data Active";
-                    checkBtn.disabled = false;
-                } else {
-                    throw new Error("DATA_MATCH_ERROR");
-                }
-            } else {
-                throw new Error("EMPTY_DATA");
-            }
+                liveIndex = nakshatras.findIndex(n => data.MoonNakshatra.toLowerCase().includes(n.toLowerCase()));
+                display.innerText = nakshatras[liveIndex];
+                status.className = "status-banner live";
+                status.innerText = "● Live Bangalore Sky Verified";
+                btn.disabled = false;
+            } else { throw new Error(); }
         } catch (e) {
-            console.error("Fetch Error:", e);
-            statusBox.className = "status-banner status-error";
-            statusBox.innerHTML = "❌ Connection Failed. Refresh App.";
-            starBox.innerText = "Check Connection";
-            checkBtn.disabled = true;
+            status.className = "status-banner error";
+            status.innerText = "❌ Connection Failed. Check Internet.";
+            display.innerText = "Reconnect Required";
         }
     }
 
-    function calculateTarabalam() {
-        if (currentStarIndex === null) return;
-
-        const birthStar = parseInt(select.value);
-        const transitStar = currentStarIndex + 1;
-
-        let diff = (transitStar - birthStar + 1);
+    function calculate() {
+        const birth = parseInt(select.value);
+        let diff = ((liveIndex + 1) - birth + 1);
         if (diff <= 0) diff += 27;
-        const score = diff % 9;
-
-        const tara = taraData[score];
-        const resArea = document.getElementById('resultArea');
+        const tara = taraData[diff % 9];
         
-        resArea.style.display = 'block';
-        resArea.className = `res-${tara.type}`;
+        const area = document.getElementById('resultArea');
+        area.style.display = 'block';
+        area.className = tara.type;
         document.getElementById('resIcon').innerText = tara.icon;
         document.getElementById('resName').innerText = tara.name;
         document.getElementById('resDesc').innerText = tara.desc;
-
-        resArea.scrollIntoView({ behavior: 'smooth' });
     }
 
-    window.onload = fetchLivePanchang;
+    window.onload = fetchLive;
 </script>
 </body>
 </html>
