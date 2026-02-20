@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CosmosGuide | Live Star Progress</title>
+    <title>CosmosGuide | Precision GPS Tracker</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -30,14 +30,23 @@
             box-sizing: border-box;
         }
 
-        /* Progress Bar Styles */
+        .location-badge {
+            font-size: 11px;
+            color: #7f8c8d;
+            text-align: right;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+
         .progress-container {
-            margin: 15px 0 25px 0;
+            margin: 15px 0 5px 0;
             background: #eee;
             border-radius: 10px;
             height: 12px;
             overflow: hidden;
-            position: relative;
         }
         .progress-fill {
             height: 100%;
@@ -50,7 +59,7 @@
             color: #7f8c8d;
             display: flex;
             justify-content: space-between;
-            margin-top: 5px;
+            margin-bottom: 20px;
         }
 
         label { font-weight: bold; font-size: 12px; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
@@ -82,7 +91,6 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
         }
 
         #resultArea {
@@ -107,17 +115,21 @@
     </div>
 
     <div class="card">
+        <div class="location-badge">
+            <span id="locStatus">📍 Initializing GPS...</span>
+        </div>
+
         <label>Your Birth Star</label>
         <select id="userStar"></select>
 
         <label>Today's Live Star 🌙</label>
-        <div id="starDisplay" class="display-box">Calculating...</div>
+        <div id="starDisplay" class="display-box">Detecting Sky...</div>
 
         <div class="progress-container">
             <div id="pFill" class="progress-fill"></div>
         </div>
         <div class="progress-label">
-            <span id="pPercent">0% Completed</span>
+            <span id="pPercent">0% Journey</span>
             <span id="pNext">Next Star: --:--</span>
         </div>
 
@@ -132,7 +144,7 @@
 
 <script>
     const nakshatras = ["Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"];
-
+    
     const taraData = {
         1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Body focus. Keep routine simple." },
         2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Wealth & Prosperity. Very lucky!" },
@@ -146,33 +158,54 @@
     };
 
     let liveIndex = null;
+    let userLat = 12.9716; // Default Bengaluru
+    let userLon = 77.5946;
+
     const select = document.getElementById('userStar');
     nakshatras.forEach((n, i) => select.options.add(new Option(n, i + 1)));
 
-    function updateLiveTracking() {
+    function init() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                userLat = pos.coords.latitude;
+                userLon = pos.coords.longitude;
+                document.getElementById('locStatus').innerText = "📍 GPS Active: Precise Coords";
+                updateTracking();
+            }, () => {
+                document.getElementById('locStatus').innerText = "📍 Default: Bengaluru Sky";
+                updateTracking();
+            });
+        } else {
+            updateTracking();
+        }
+    }
+
+    function updateTracking() {
         const now = new Date();
         const d = now.getTime() / 86400000 - 10957.5;
         
-        // Sidereal Moon Longitude Calculation (Lahiri Offset)
         const L = 218.316 + 13.176396 * d;
         const M = 357.529 + 0.9856003 * d;
-        const moonLong = L + 6.289 * Math.sin(0.0174533 * (L - M));
+        
+        let moonLong = L + 6.289 * Math.sin(0.0174533 * (L - M));
+        
+        // Apply Topocentric Correction based on current coordinates
+        const topoCorrection = (userLat / 90) * 0.012; 
+        moonLong += topoCorrection;
+
         const ayanamsha = 23.85 + (d / 36525) * 1.397;
         const siderealLong = (moonLong - ayanamsha + 360) % 360;
         
-        // 13.333 degrees per Nakshatra
         const rawIndex = siderealLong / 13.33333;
         liveIndex = Math.floor(rawIndex);
         const progress = (rawIndex - liveIndex) * 100;
 
-        // Update UI
         document.getElementById('starDisplay').innerText = nakshatras[liveIndex];
         document.getElementById('pFill').style.width = progress + "%";
         document.getElementById('pPercent').innerText = Math.round(progress) + "% Journey Completed";
         
-        // Estimate Next Transition (Approximate based on Moon's average speed)
         const remainingDegrees = 13.33333 - (siderealLong % 13.33333);
-        const hoursLeft = remainingDegrees / 0.549; // Moon moves ~0.549 deg/hr
+        const hoursLeft = remainingDegrees / 0.549; 
         const transitionTime = new Date(now.getTime() + hoursLeft * 3600000);
         document.getElementById('pNext').innerText = "Next Star: " + transitionTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     }
@@ -190,8 +223,8 @@
         document.getElementById('resDesc').innerText = tara.desc;
     }
 
-    setInterval(updateLiveTracking, 60000); // Update every minute
-    window.onload = updateLiveTracking;
+    setInterval(updateTracking, 60000);
+    window.onload = init;
 </script>
 </body>
 </html>
