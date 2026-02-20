@@ -581,53 +581,51 @@
     const BANGALORE_LON = 77.5946;
     let todayNakshatraIndex = null;
 
-    // Populate Dropdown
+    // Initialize dropdown
     nakshatras.forEach((n, i) => {
         userSelect.options[userSelect.options.length] = new Option(n, i + 1);
     });
     userSelect.value = 1;
 
-    function displayDate() {
-        const today = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        dateDisplay.textContent = `📅 ${today.toLocaleDateString('en-US', options)}`;
-    }
-
     async function fetchTodaysNakshatra() {
-        displayDate();
         try {
+            // 1. Get exact current time for Bangalore (+5:30)
             const now = new Date();
-            const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-            const timeStr = `${now.getHours()}:${now.getMinutes()}`;
+            const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             
-            // API call to VedAstro (Reliable for Lahiri Ayanamsha)
-            const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Time=${timeStr}&Latitude=${BANGALORE_LAT}&Longitude=${BANGALORE_LON}&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
-            
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network Issue');
-            
-            const data = await response.json();
-            
-            if (data.MoonNakshatra) {
-                const nakName = data.MoonNakshatra;
-                // Find index by checking if our array includes the API name
-                const nakIndex = nakshatras.findIndex(n => n.toLowerCase() === nakName.toLowerCase());
-                
+            dateDisplay.textContent = `📅 ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | ${timeStr}`;
+
+            // 2. Call API with CURRENT Bangalore time
+            const response = await fetch(
+                `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Time=${timeStr}&Latitude=${BANGALORE_LAT}&Longitude=${BANGALORE_LON}&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                const apiNakshatraName = data.MoonNakshatra;
+
+                // 3. Match API name with our index
+                const nakIndex = nakshatras.findIndex(n => 
+                    apiNakshatraName.toLowerCase().includes(n.toLowerCase())
+                );
+
                 if (nakIndex !== -1) {
                     todayNakshatraIndex = nakIndex;
-                    displayTodaysStar(nakIndex, 'success', `✓ Real-time Nakshatra detected for Bangalore.`);
+                    updateUI(nakIndex, 'success', `✓ Live Star: ${apiNakshatraName} (Bangalore Time)`);
+                    return;
                 }
             }
-        } catch (error) {
-            console.error("API failed, using local calculation", error);
+            throw new Error("API failed");
+        } catch (err) {
+            console.error(err);
             // Fallback to local calculation if API is down
             const fallbackIndex = calculateNakshatraFallback(new Date());
             todayNakshatraIndex = fallbackIndex;
-            displayTodaysStar(fallbackIndex, 'warning', `⚙️ Calculation based on current time.`);
+            updateUI(fallbackIndex, 'warning', `⚠️ Using calculated Star (API Unavailable)`);
         }
     }
 
-    // Fallback logic using current precise time
     function calculateNakshatraFallback(date) {
         const jd = (date.getTime() / 86400000) + 2440587.5;
         const daysSince2000 = jd - 2451545;
@@ -637,26 +635,22 @@
         return Math.floor(siderealMoonLong / 13.333333) % 27;
     }
 
-    function displayTodaysStar(index, statusType, statusMessage) {
+    function updateUI(index, type, msg) {
         todayStarDisplay.textContent = nakshatras[index];
         todayStarDisplay.classList.remove('loading');
-        statusBanner.className = `status-banner ${statusType}`;
-        statusText.textContent = statusMessage;
+        statusBanner.className = `status-banner ${type}`;
+        statusText.textContent = msg;
         const spinner = statusBanner.querySelector('.spinner');
         if (spinner) spinner.style.display = 'none';
     }
 
     function calculateTarabalam() {
-        if (todayNakshatraIndex === null) {
-            alert('Wait for Nakshatra to load...');
-            return;
-        }
-
+        if (todayNakshatraIndex === null) return alert("Still loading astrological data...");
+        
         const birthStar = parseInt(userSelect.value);
-        const transitStar = todayNakshatraIndex + 1;
+        const currentStar = todayNakshatraIndex + 1;
 
-        // Tarabalam formula: (Transit Star - Birth Star + 1) % 9
-        let diff = (transitStar - birthStar + 1);
+        let diff = (currentStar - birthStar + 1);
         while (diff <= 0) diff += 27;
         let score = diff % 9;
 
@@ -667,9 +661,7 @@
         document.getElementById('resultIcon').innerText = tara.icon;
         document.getElementById('taraName').innerText = tara.name;
         document.getElementById('taraDesc').innerText = tara.desc;
-
         resultDiv.style.display = 'block';
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function resetForm() {
@@ -679,6 +671,5 @@
 
     window.addEventListener('load', fetchTodaysNakshatra);
 </script>
-
 </body>
 </html>
