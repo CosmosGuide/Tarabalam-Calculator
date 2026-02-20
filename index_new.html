@@ -16,12 +16,16 @@
             padding: 20px;
         }
 
-        /* Branding */
+        /* Branding Section */
         .brand-container { text-align: center; margin-bottom: 20px; color: white; }
-        .logo { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px; border: 2px solid gold; }
-        .brand-name { font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 1px; }
+        .logo { 
+            width: 100px; height: 100px; border-radius: 50%; 
+            margin-bottom: 10px; border: 2px solid gold; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .brand-name { font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 1px; }
 
-        /* Card */
+        /* Main App Card */
         .card {
             background: white;
             width: 100%;
@@ -32,19 +36,23 @@
             box-sizing: border-box;
         }
 
+        /* Status Banners */
         .status-banner {
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-size: 14px;
             text-align: center;
             margin-bottom: 20px;
             font-weight: bold;
         }
-        .live { background: #e8f5e9; color: #2e7d32; }
-        .error { background: #ffebee; color: #c62828; }
-        .loading { background: #fff3e0; color: #ef6c00; }
+        .live { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .loading { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
 
-        label { font-weight: bold; font-size: 13px; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        label { 
+            font-weight: bold; font-size: 13px; color: #555; 
+            text-transform: uppercase; display: block; margin-bottom: 8px; 
+        }
         
         select, .display-box {
             width: 100%;
@@ -64,10 +72,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            min-height: 58px;
         }
 
-        /* Action Buttons */
+        /* Buttons */
         .btn-check {
             width: 100%;
             padding: 16px;
@@ -78,28 +87,40 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+            transition: background 0.3s;
         }
         .btn-check:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-check:hover:not(:disabled) { background: #2575fc; }
 
         .refresh-btn {
-            background: none;
+            background: #6a11cb;
+            color: white;
             border: none;
             cursor: pointer;
-            font-size: 18px;
-            padding: 0;
-            line-height: 1;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
+        /* Results Display */
         #resultArea {
             margin-top: 20px;
-            padding: 15px;
+            padding: 20px;
             border-radius: 12px;
             display: none;
             text-align: center;
+            animation: fadeIn 0.5s ease;
         }
-        .good { background: #d4edda; border: 1px solid #c3e6cb; }
-        .bad { background: #f8d7da; border: 1px solid #f5c6cb; }
-        .neutral { background: #fff3cd; border: 1px solid #ffeeba; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .good { background: #d4edda; border: 2px solid #c3e6cb; color: #155724; }
+        .bad { background: #f8d7da; border: 2px solid #f5c6cb; color: #721c24; }
+        .neutral { background: #fff3cd; border: 2px solid #ffeeba; color: #856404; }
+
+        .footer { margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.6); text-align: center; }
     </style>
 </head>
 <body>
@@ -107,87 +128,102 @@
     <div class="brand-container">
         <img src="icon-192.png" alt="CosmosGuide" class="logo">
         <h1 class="brand-name">CosmosGuide</h1>
-        <div style="font-size: 12px; opacity: 0.8;">LIVE BANGALORE PANCHANG</div>
+        <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">LIVE BANGALORE PANCHANG</div>
     </div>
 
     <div class="card">
-        <div id="status" class="status-banner loading">📡 Connecting to Bangalore Sky...</div>
+        <div id="status" class="status-banner loading">📡 Connecting to Live Sky Data...</div>
 
         <label>Your Birth Star</label>
         <select id="userStar"></select>
 
-        <label>Current Star (Live)</label>
+        <label>Current Star (Verified Live) 🌙</label>
         <div class="display-box">
             <span id="starDisplay">Checking...</span>
-            <button class="refresh-btn" onclick="fetchLive()" title="Sync Data">🔄</button>
+            <button class="refresh-btn" onclick="fetchLive()" title="Sync Data">🔄 Sync</button>
         </div>
 
         <button id="checkBtn" class="btn-check" onclick="calculate()" disabled>Check Alignment</button>
 
         <div id="resultArea">
-            <div id="resIcon" style="font-size: 40px;"></div>
-            <h3 id="resName" style="margin: 5px 0;"></h3>
-            <p id="resDesc" style="font-size: 14px; margin: 0;"></p>
+            <div id="resIcon" style="font-size: 44px; margin-bottom: 5px;"></div>
+            <h3 id="resName" style="margin: 5px 0; font-size: 22px;"></h3>
+            <p id="resDesc" style="font-size: 15px; margin: 0; line-height: 1.4;"></p>
         </div>
+    </div>
+
+    <div class="footer">
+        © CosmosGuide | Precision Astrology (Lahiri Ayanamsha)
     </div>
 
 <script>
     const nakshatras = ["Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"];
 
     const taraData = {
-        1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Focus on routine. Avoid major physical strain." },
-        2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Excellent for money matters and new beginnings." },
-        3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Obstacles possible. Be cautious with travel/risks." },
-        4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "A safe, protected, and auspicious day." },
-        5: { name: "Pratyak Tara", type: "bad", icon: "🚧", desc: "Minor hurdles. Stay patient and avoid conflict." },
-        6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Achievement. Efforts today will bring success." },
-        7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "High caution. Rest and avoid major new tasks." },
-        8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "A friendly and supportive day for social work." },
-        0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "Highly auspicious! Success is very likely." }
+        1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Focus on your health and routine. Avoid major physical strain or new health regimes today." },
+        2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "A great day for prosperity! Highly auspicious for financial gains, investments, and new business deals." },
+        3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Obstacles ahead. Be cautious with travel and avoid high-stakes risks or important decisions today." },
+        4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "A safe and comfortable day. Excellent for home life, security, and well-being." },
+        5: { name: "Pratyak Tara", type: "bad", icon: "🚧", desc: "Opposition likely. Stay patient with others and avoid getting into unnecessary arguments or conflicts." },
+        6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Success through effort! A wonderful day to complete long-term projects or spiritual goals." },
+        7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "Exercise high caution. Not a good time for auspicious events. Prioritize rest and safety today." },
+        8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "A happy, friendly day. Good for building relationships and getting support from those around you." },
+        0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "The ultimate lucky day! Everything is in your favor. Proceed with confidence in all your plans." }
     };
 
     let liveIndex = null;
     const select = document.getElementById('userStar');
+    
+    // Populate Dropdown
     nakshatras.forEach((n, i) => select.options.add(new Option(n, i + 1)));
 
     async function fetchLive() {
         const status = document.getElementById('status');
         const display = document.getElementById('starDisplay');
         const btn = document.getElementById('checkBtn');
+        const resultArea = document.getElementById('resultArea');
         
         status.className = "status-banner loading";
-        status.innerText = "📡 Syncing Live Data...";
+        status.innerText = "📡 Syncing Live Bangalore Data...";
+        display.innerText = "Connecting...";
         btn.disabled = true;
+        resultArea.style.display = 'none';
 
         try {
             const now = new Date();
-            const date = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-            const time = `${now.getHours()}:${now.getMinutes()}`;
+            const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+            const timeStr = `${now.getHours()}:${now.getMinutes()}`;
             
-            // Explicit Bangalore Coordinates
-            const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${date}&Time=${time}&Latitude=12.9716&Longitude=77.5946&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
+            // Explicitly requesting Bangalore Sky Data
+            const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Time=${timeStr}&Latitude=12.9716&Longitude=77.5946&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
             
             const res = await fetch(url);
+            if (!res.ok) throw new Error();
+            
             const data = await res.json();
             
             if (data.MoonNakshatra) {
                 liveIndex = nakshatras.findIndex(n => data.MoonNakshatra.toLowerCase().includes(n.toLowerCase()));
+                if(liveIndex === -1) throw new Error();
+                
                 display.innerText = nakshatras[liveIndex];
                 status.className = "status-banner live";
-                status.innerText = "● Live Bangalore Sky Verified";
+                status.innerText = "● Verified Live Sky Data Active";
                 btn.disabled = false;
             } else { throw new Error(); }
         } catch (e) {
             status.className = "status-banner error";
-            status.innerText = "❌ Connection Failed. Check Internet.";
-            display.innerText = "Reconnect Required";
+            status.innerText = "❌ Connection Failed. Reconnect Required.";
+            display.innerText = "Offline";
+            btn.disabled = true;
         }
     }
 
     function calculate() {
+        if (liveIndex === null) return;
         const birth = parseInt(select.value);
         let diff = ((liveIndex + 1) - birth + 1);
-        if (diff <= 0) diff += 27;
+        while (diff <= 0) diff += 27;
         const tara = taraData[diff % 9];
         
         const area = document.getElementById('resultArea');
@@ -196,6 +232,8 @@
         document.getElementById('resIcon').innerText = tara.icon;
         document.getElementById('resName').innerText = tara.name;
         document.getElementById('resDesc').innerText = tara.desc;
+        
+        area.scrollIntoView({ behavior: 'smooth' });
     }
 
     window.onload = fetchLive;
