@@ -72,6 +72,7 @@
         }
 
         .status-live { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-error { background: #fdecea; color: #af2c2c; border: 1px solid #f5c2c2; }
         .status-sync { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
 
         label {
@@ -98,6 +99,7 @@
             font-weight: 700;
             color: #d35400;
             text-align: center;
+            min-height: 58px;
         }
 
         .btn-check {
@@ -114,9 +116,8 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-check:active { transform: scale(0.98); }
+        .btn-check:disabled { background: #cbd5e0; cursor: not-allowed; box-shadow: none; }
 
-        /* Results Area */
         #resultArea {
             margin-top: 25px;
             padding: 20px;
@@ -124,11 +125,6 @@
             display: none;
             text-align: center;
             animation: slideUp 0.4s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .res-good { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
@@ -140,13 +136,6 @@
             font-size: 13px;
             color: rgba(255,255,255,0.7);
             text-align: center;
-            line-height: 1.6;
-        }
-
-        .whatsapp-link {
-            color: #25D366;
-            text-decoration: none;
-            font-weight: bold;
         }
     </style>
 </head>
@@ -155,21 +144,21 @@
     <div class="brand-section">
         <img src="icon-192.png" alt="CosmosGuide Logo" class="logo">
         <h1 class="brand-name">CosmosGuide</h1>
-        <p style="margin-top:5px; opacity: 0.8;">Astrological Alignment Tool</p>
+        <p style="margin-top:5px; opacity: 0.8;">Verified Live Tarabalam</p>
     </div>
 
     <div class="card">
         <div id="statusBanner" class="status-banner status-sync">
-            <span>⌛ Syncing Sky Data for Bangalore...</span>
+            <span>📡 Connecting to Live Sky Data...</span>
         </div>
 
-        <label>Your Birth Star (Janma Nakshatra)</label>
+        <label>Your Birth Star</label>
         <select id="userStar"></select>
 
-        <label>Today's Star in Bangalore 🌙</label>
-        <div id="todayStarBox" class="display-box">Detecting...</div>
+        <label>Today's Star (Live Bangalore) 🌙</label>
+        <div id="todayStarBox" class="display-box">Waiting for API...</div>
 
-        <button class="btn-check" onclick="calculateTarabalam()">Check My Alignment</button>
+        <button id="checkBtn" class="btn-check" onclick="calculateTarabalam()" disabled>Check Alignment</button>
 
         <div id="resultArea">
             <div id="resIcon" style="font-size: 48px; margin-bottom: 10px;"></div>
@@ -179,17 +168,11 @@
     </div>
 
     <div class="footer-text">
-        <p>Official CosmosGuide Application<br>
-        Based on Bangalore Coordinates & Lahiri Ayanamsha</p>
-        <a href="https://wa.me/919019161946" class="whatsapp-link">📱 Support: +91 90191 61946</a>
+        <p>© CosmosGuide | Data powered by Live Panchang API</p>
     </div>
 
 <script>
-    const nakshatras = [
-        "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
-        "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
-        "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
-    ];
+    const nakshatras = ["Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"];
 
     const taraData = {
         1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Body focus. Keep your routine simple and avoid major physical strain today." },
@@ -209,42 +192,44 @@
     const select = document.getElementById('userStar');
     nakshatras.forEach((n, i) => select.options.add(new Option(n, i + 1)));
 
-    async function initPanchang() {
+    async function fetchLivePanchang() {
         const statusBox = document.getElementById('statusBanner');
         const starBox = document.getElementById('todayStarBox');
+        const checkBtn = document.getElementById('checkBtn');
 
         try {
             const now = new Date();
             const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
             const timeStr = `${now.getHours()}:${now.getMinutes()}`;
 
-            // Real-Time API call for Bangalore
             const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Time=${timeStr}&Latitude=12.9716&Longitude=77.5946&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
             
             const response = await fetch(url);
+            if (!response.ok) throw new Error("API_REACH_ERROR");
+            
             const data = await response.json();
             
             if (data.MoonNakshatra) {
                 const apiStar = data.MoonNakshatra;
                 currentStarIndex = nakshatras.findIndex(n => apiStar.toLowerCase().includes(n.toLowerCase()));
                 
-                starBox.innerText = nakshatras[currentStarIndex];
-                statusBox.className = "status-banner status-live";
-                statusBox.innerHTML = "● Live Bangalore Sky Data Active";
-                return;
+                if (currentStarIndex !== -1) {
+                    starBox.innerText = nakshatras[currentStarIndex];
+                    statusBox.className = "status-banner status-live";
+                    statusBox.innerHTML = "● Verified Live Data Active";
+                    checkBtn.disabled = false;
+                } else {
+                    throw new Error("DATA_MATCH_ERROR");
+                }
+            } else {
+                throw new Error("EMPTY_DATA");
             }
-            throw new Error("Offline");
         } catch (e) {
-            // Precise Fallback for Feb 20, 2026 transition at 20:46
-            const now = new Date();
-            const totalMinutes = (now.getHours() * 60) + now.getMinutes();
-            
-            // Transition is at 8:46 PM (1246 minutes)
-            currentStarIndex = (totalMinutes < 1246) ? 25 : 26; // 25 = Uttara Bhadrapada, 26 = Revati
-            
-            starBox.innerText = nakshatras[currentStarIndex];
-            statusBox.className = "status-banner status-sync";
-            statusBox.innerHTML = "⚠️ Verified via Offline Bangalore Calendar";
+            console.error("Fetch Error:", e);
+            statusBox.className = "status-banner status-error";
+            statusBox.innerHTML = "❌ Connection Failed. Refresh App.";
+            starBox.innerText = "Check Connection";
+            checkBtn.disabled = true;
         }
     }
 
@@ -270,7 +255,7 @@
         resArea.scrollIntoView({ behavior: 'smooth' });
     }
 
-    window.onload = initPanchang;
+    window.onload = fetchLivePanchang;
 </script>
 </body>
 </html>
