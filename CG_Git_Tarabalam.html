@@ -147,17 +147,49 @@
       });
     }
 
-    async function fetchNakshatraAt(dateObj, lat, lon) {
-      const { dateStr, timeStr, tzOffset } = getDateTimeForApi(dateObj);
+    //async function fetchNakshatraAt(dateObj, lat, lon) {
+      //const { dateStr, timeStr, tzOffset } = getDateTimeForApi(dateObj);
 
-      const params = new URLSearchParams({
-        Date: dateStr,
-        Time: timeStr,
-        Latitude: String(lat),
-        Longitude: String(lon),
-        TimeZoneOffset: tzOffset,
-        Ayanamsha: "Lahiri"
-      });
+      //const params = new URLSearchParams({
+        //Date: dateStr,
+        //Time: timeStr,
+        //Latitude: String(lat),
+        //Longitude: String(lon),
+        //TimeZoneOffset: tzOffset,
+        //Ayanamsha: "Lahiri"
+      //});
+    async function fetchNakshatraAt(dateObj, lat, lon) {
+  const { dateStr, timeStr, tzOffset } = getDateTimeForApi(dateObj);
+
+  const params = new URLSearchParams({
+    Date: dateStr,
+    Time: timeStr,
+    Latitude: String(lat),
+    Longitude: String(lon),
+    TimeZoneOffset: tzOffset,
+    Ayanamsha: "Lahiri"
+  });
+
+  // The Original API URL
+  const targetUrl = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?${params.toString()}`;
+  
+  // PROFESSIONAL FIX: Routing through a CORS proxy
+  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+
+  const res = await fetch(proxyUrl, { 
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  
+  const data = await res.json();
+
+  const idx = findNakshatraIndex(data?.MoonNakshatra);
+  if (idx === -1) throw new Error(`Unknown MoonNakshatra: ${data?.MoonNakshatra}`);
+
+  return { idx, raw: data };
+}
 
       const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?${params.toString()}`;
       const res = await fetch(url, { cache: "no-store" });
