@@ -206,6 +206,8 @@
             // Using a cleaner Proxy approach
             const apiURL = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=25/02/2026&Time=15:30&Latitude=23.17&Longitude=75.78&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
             const proxyURL = `https://cors-anywhere.herokuapp.com/${apiURL}`; 
+
+          console.log("Debug variable:", yourVariableName);
             
             // Try fetching from a public reliable proxy or directly
             const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`);
