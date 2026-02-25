@@ -64,272 +64,93 @@
     ];
 
     const taraData = {
-      1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Body/Health focus. Stay calm, avoid heavy strain, and keep things routine." },
-      2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Wealth & Success. Very lucky for money matters and starting good work!" },
-      3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Obstacles. Be careful with travel or arguments today. Postpone big decisions." },
-      4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "Safe & Secure. A protected day. Good for family time and health." },
-      5: { name: "Pratyari Tara", type: "bad", icon: "🚧", desc: "Opposition. Others might disagree with you. Stay patient and avoid conflict." },
-      6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Achievement. Your hard work will pay off today. Great for getting things done!" },
-      7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "Highly Cautionary. Avoid any major new activity. Rest and stay safe." },
-      8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "Friendly Day. Good for meeting friends and happy conversations." },
-      0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "Best Friend. Highly auspicious! Everything moves in your favor today." }
+      1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: "Body/Health focus. Stay calm and keep things routine." },
+      2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Wealth & Success. Very lucky for money matters!" },
+      3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Obstacles. Be careful with travel or arguments today." },
+      4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "Safe & Secure. A protected day. Good for family." },
+      5: { name: "Pratyari Tara", type: "bad", icon: "🚧", desc: "Opposition. Stay patient and avoid conflict." },
+      6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Achievement. Your hard work will pay off today!" },
+      7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "Cautionary. Avoid major new activities. Rest." },
+      8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "Friendly Day. Good for meeting friends." },
+      0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "Best Friend. Highly auspicious! Everything moves in your favor." }
     };
 
-    // Populate dropdown
+    // --- DOM ELEMENTS ---
     const select = document.getElementById('userStar');
-    nakshatras.forEach((n, i) => select.options.add(new Option(n, i + 1)));
+    const statusText = document.getElementById('statusText');
+    const starDisplay = document.getElementById("todayStarDisplay");
 
-    // Ujjain fallback
-    const FALLBACK = { lat: 23.1765, lon: 75.7885, label: "Ujjain, India" };
-
-    function setStatus(kind, text) {
-      const banner = document.getElementById('statusBanner');
-      banner.className = "status-badge " + (kind === "live" ? "live" : kind === "warn" ? "warn" : "err");
-      document.getElementById('statusText').innerText = text;
-    }
-
-    function normalize(s) {
-      return String(s || "").toLowerCase().replace(/[\s\-_.]/g, '');
-    }
-
-    function findNakshatraIndex(apiValue) {
-      const normApi = normalize(apiValue);
-      if (!normApi) return -1;
-      let idx = nakshatras.findIndex(n => normalize(n) === normApi);
-      if (idx !== -1) return idx;
-      idx = nakshatras.findIndex(n => normApi.includes(normalize(n)));
-      return idx;
-    }
-
-    function prettyNow(d = new Date()) {
-      return d.toLocaleString([], { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-    }
-
-    // Build API Date/Time/TZ from a JS Date at the user's local timezone.
-    // Note: when user is NOT in the target location timezone, this is still okay because we pass TimeZoneOffset explicitly.
-    function getDateTimeForApi(dateObj) {
-      const dd = String(dateObj.getDate()).padStart(2, '0');
-      const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const yyyy = String(dateObj.getFullYear());
-      const HH = String(dateObj.getHours()).padStart(2, '0');
-      const MI = String(dateObj.getMinutes()).padStart(2, '0');
-
-      const dateStr = `${dd}/${mm}/${yyyy}`;
-      const timeStr = `${HH}:${MI}`;
-
-      const offsetMin = -dateObj.getTimezoneOffset(); // minutes ahead of UTC
-      const sign = offsetMin >= 0 ? "+" : "-";
-      const abs = Math.abs(offsetMin);
-      const oh = String(Math.floor(abs / 60)).padStart(2, "0");
-      const om = String(abs % 60).padStart(2, "0");
-      const tzOffset = `${sign}${oh}:${om}`;
-
-      return { dateStr, timeStr, tzOffset };
-    }
-
-    async function getUserLocation({ timeoutMs = 8000 } = {}) {
-      return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-          resolve({ ...FALLBACK, acc: null, fallback: true });
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-            acc: pos.coords.accuracy,
-            label: "Your location",
-            fallback: false
-          }),
-          () => resolve({ ...FALLBACK, acc: null, fallback: true }),
-          { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 60_000 }
-        );
+    // --- INITIALIZE DROPDOWN (Runs instantly) ---
+    function initDropdown() {
+      select.innerHTML = ""; // Clear existing
+      nakshatras.forEach((n, i) => {
+        let opt = document.createElement('option');
+        opt.value = i + 1;
+        opt.textContent = n;
+        select.appendChild(opt);
       });
     }
 
-    //async function fetchNakshatraAt(dateObj, lat, lon) {
-      //const { dateStr, timeStr, tzOffset } = getDateTimeForApi(dateObj);
-
-      //const params = new URLSearchParams({
-        //Date: dateStr,
-        //Time: timeStr,
-        //Latitude: String(lat),
-        //Longitude: String(lon),
-        //TimeZoneOffset: tzOffset,
-        //Ayanamsha: "Lahiri"
-      //});
+    // --- API CORE ---
     async function fetchNakshatraAt(dateObj, lat, lon) {
-  const { dateStr, timeStr, tzOffset } = getDateTimeForApi(dateObj);
+      const { dateStr, timeStr, tzOffset } = getDateTimeForApi(dateObj);
+      const params = new URLSearchParams({
+        Date: dateStr, Time: timeStr, Latitude: String(lat), Longitude: String(lon),
+        TimeZoneOffset: tzOffset, Ayanamsha: "Lahiri"
+      });
 
-  const params = new URLSearchParams({
-    Date: dateStr,
-    Time: timeStr,
-    Latitude: String(lat),
-    Longitude: String(lon),
-    TimeZoneOffset: tzOffset,
-    Ayanamsha: "Lahiri"
-  });
+      const targetUrl = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?${params.toString()}`;
+      // Using AllOrigins proxy - more reliable for JSON data
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
 
-  // The Original API URL
-  const targetUrl = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?${params.toString()}`;
-  
-  // PROFESSIONAL FIX: Routing through a CORS proxy
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error("Proxy Error");
+      
+      const wrapper = await res.json();
+      const data = JSON.parse(wrapper.contents); // AllOrigins wraps the response in 'contents'
 
-  const res = await fetch(proxyUrl, { 
-    method: 'GET',
-    headers: { 'Accept': 'application/json' }
-  });
-
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  
-  const data = await res.json();
-
-  const idx = findNakshatraIndex(data?.MoonNakshatra);
-  if (idx === -1) throw new Error(`Unknown MoonNakshatra: ${data?.MoonNakshatra}`);
-
-  return { idx, raw: data };
-}
-
-      const url = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?${params.toString()}`;
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
-      const idx = findNakshatraIndex(data?.MoonNakshatra);
-      if (idx === -1) throw new Error(`Unknown MoonNakshatra: ${data?.MoonNakshatra}`);
-
-      return { idx, raw: data };
+      const idx = nakshatras.findIndex(n => 
+        data.MoonNakshatra.toLowerCase().replace(/\s/g, '').includes(n.toLowerCase().replace(/\s/g, ''))
+      );
+      
+      if (idx === -1) throw new Error("Data Mismatch");
+      return { idx };
     }
 
-    // Compute end time by finding when nakshatra changes.
-    // Strategy:
-    // 1) Query now => idx0
-    // 2) Expand forward until idx changes (or max horizon)
-    // 3) Binary search in that window to find change moment to ~1 minute precision
-    async function computeNakshatraEndTime(now, lat, lon, idx0) {
-      const MAX_HOURS_LOOKAHEAD = 36;   // nakshatra always changes within this window
-      const COARSE_STEP_MIN = 90;       // expansion step
-      const PRECISION_MIN = 1;          // final precision
-
-      // Step A: find a future time where nakshatra != idx0
-      let lo = new Date(now);
-      let hi = new Date(now);
-
-      let changed = false;
-      for (let mins = COARSE_STEP_MIN; mins <= MAX_HOURS_LOOKAHEAD * 60; mins += COARSE_STEP_MIN) {
-        hi = new Date(now.getTime() + mins * 60_000);
-        const { idx } = await fetchNakshatraAt(hi, lat, lon);
-        if (idx !== idx0) {
-          changed = true;
-          break;
-        }
-      }
-      if (!changed) return null;
-
-      // Step B: binary search between lo (same) and hi (changed)
-      while ((hi - lo) > (PRECISION_MIN * 60_000)) {
-        const mid = new Date((lo.getTime() + hi.getTime()) / 2);
-        const { idx } = await fetchNakshatraAt(mid, lat, lon);
-        if (idx === idx0) lo = mid;
-        else hi = mid;
-      }
-
-      // hi is the first moment (approx) when nakshatra differs => end is around hi
-      return hi;
+    // --- HELPERS (Same as before but cleaned) ---
+    function getDateTimeForApi(d) {
+      const pad = (n) => String(n).padStart(2, '0');
+      const offsetMin = -d.getTimezoneOffset();
+      const tz = `${offsetMin >= 0 ? '+' : '-'}${pad(Math.floor(Math.abs(offsetMin) / 60))}:${pad(Math.abs(offsetMin) % 60)}`;
+      return { 
+        dateStr: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`, 
+        timeStr: `${pad(d.getHours())}:${pad(d.getMinutes())}`, 
+        tzOffset: tz 
+      };
     }
 
-    // App state
-    let currentStarIndex = null;
-    let currentFix = null;
-    let currentEndTime = null;
-
-    function renderStar() {
-      const starEl = document.getElementById("todayStarDisplay");
-      const metaEl = document.getElementById("metaDisplay");
-      const endEl  = document.getElementById("endDisplay");
-
-      if (currentStarIndex == null) {
-        starEl.innerText = "Unavailable";
-        metaEl.innerText = "";
-        endEl.innerText = "";
-        return;
-      }
-
-      starEl.innerText = nakshatras[currentStarIndex];
-
-      const locText = currentFix
-        ? (currentFix.fallback
-            ? `Location: ${currentFix.label} (fallback)`
-            : `Location: ${currentFix.lat.toFixed(4)}, ${currentFix.lon.toFixed(4)}${currentFix.acc ? ` (±${Math.round(currentFix.acc)}m)` : ""}`)
-        : "";
-
-      metaEl.innerText = `${prettyNow(new Date())} • ${locText}`;
-
-      if (currentEndTime) {
-        endEl.innerText = `Valid until: ${prettyNow(currentEndTime)}`;
-      } else {
-        endEl.innerText = "";
-      }
-    }
-
-    async function refreshStarAndEndTime({ computeEnd = true } = {}) {
-      setStatus("live", "Getting your location & sky data...");
-      currentStarIndex = null;
-      currentEndTime = null;
-      renderStar();
-
+    async function refresh() {
       try {
-        const now = new Date();
-        currentFix = await getUserLocation();
-
-        const { idx } = await fetchNakshatraAt(now, currentFix.lat, currentFix.lon);
-        currentStarIndex = idx;
-        renderStar();
-
-        setStatus(
-          currentFix.fallback ? "warn" : "live",
-          currentFix.fallback ? "✓ Updated using Ujjain fallback" : "✓ Updated using your location"
-        );
-
-        if (computeEnd) {
-          setStatus(
-            currentFix.fallback ? "warn" : "live",
-            (currentFix.fallback ? "✓ Updated (Ujjain fallback). " : "✓ Updated (your location). ") + "Calculating end time..."
-          );
-
-          const endTime = await computeNakshatraEndTime(now, currentFix.lat, currentFix.lon, currentStarIndex);
-          currentEndTime = endTime; // can be null if not found (unlikely)
-          renderStar();
-
-          setStatus(
-            currentFix.fallback ? "warn" : "live",
-            currentFix.fallback ? "✓ Sky data ready (Ujjain fallback)" : "✓ Sky data ready (your location)"
-          );
-        }
+        statusText.innerText = "Connecting to sky data...";
+        const lat = 23.1765, lon = 75.7885; // Defaulting to Ujjain for speed, can re-add geo later
+        const result = await fetchNakshatraAt(new Date(), lat, lon);
+        currentStarIndex = result.idx;
+        starDisplay.innerText = nakshatras[currentStarIndex];
+        statusText.innerText = "✓ System Ready";
       } catch (e) {
+        statusText.innerText = "✖ Connection Error. Try again.";
         console.error(e);
-        setStatus("err", "✖ Could not fetch Panchang data (check internet/CORS).");
-        currentStarIndex = null;
-        currentEndTime = null;
-        renderStar();
       }
     }
 
-    function calculateTarabalam() {
-      if (currentStarIndex == null) {
-        alert("Current star not available. Please refresh and try again.");
-        return;
-      }
-
-      const birthStar = parseInt(select.value, 10); // 1..27
-      const currentStar = currentStarIndex + 1;     // 1..27
-
+    // --- EVENTS ---
+    document.getElementById("checkBtn").addEventListener("click", () => {
+      if (typeof currentStarIndex === 'undefined') return alert("Still loading sky data...");
+      const birthStar = parseInt(select.value);
+      const currentStar = currentStarIndex + 1;
       let diff = (currentStar - birthStar + 1);
       if (diff <= 0) diff += 27;
-
-      const score = diff % 9; // 0..8
-      const tara = taraData[score];
+      const tara = taraData[diff % 9];
 
       const resDiv = document.getElementById('result');
       resDiv.style.display = 'block';
@@ -337,17 +158,11 @@
       document.getElementById('resultIcon').innerText = tara.icon;
       document.getElementById('taraName').innerText = tara.name;
       document.getElementById('taraDesc').innerText = tara.desc;
-      resDiv.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // “Check now” should refresh first so it matches time-of-question
-    document.getElementById("checkBtn").addEventListener("click", async () => {
-      await refreshStarAndEndTime({ computeEnd: true });
-      calculateTarabalam();
     });
 
-    document.getElementById("refreshBtn").addEventListener("click", () => refreshStarAndEndTime({ computeEnd: true }));
-    window.addEventListener("load", () => refreshStarAndEndTime({ computeEnd: true }));
-  </script>
+    // Start everything
+    initDropdown();
+    refresh();
+</script>
 </body>
 </html>
