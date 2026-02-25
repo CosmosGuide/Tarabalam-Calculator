@@ -29,7 +29,7 @@
 </head>
 <body>
   <div class="card">
-    <h2>🌟 Tarabalam Now</h2>
+    <h2>🌟 Tarabalam </h2>
 
     <div id="statusBanner" class="status-badge live">
       🛰️ <span id="statusText">Getting your location & sky data...</span>
@@ -308,24 +308,32 @@ Don’ts: Avoid risky ventures, emotional confrontations, and overexertion." },
 
     // 3. Calculation Logic
     document.getElementById("checkBtn").addEventListener("click", () => {
-        if (currentStarIndex === null) return alert("Still loading sky data...");
-        
-        const birthStar = parseInt(select.value);
-        const currentStar = currentStarIndex + 1;
-        
-        let diff = (currentStar - birthStar + 1);
-        if (diff <= 0) diff += 27;
-        
-        const tara = taraData[diff % 9];
-        const resDiv = document.getElementById('result');
-        
-        resDiv.style.display = 'block';
-        resDiv.className = `result-box ${tara.type}`;
-        document.getElementById('resultIcon').innerText = tara.icon;
-        document.getElementById('taraName').innerText = tara.name;
-        document.getElementById('taraDesc').innerText = tara.desc;
-        resDiv.scrollIntoView({ behavior: 'smooth' });
-    });
+    if (currentStarIndex === null) return alert("Still loading sky data...");
+    
+    const birthStar = parseInt(select.value);
+    const currentStar = currentStarIndex + 1;
+    
+    let diff = (currentStar - birthStar + 1);
+    if (diff <= 0) diff += 27;
+    
+    // Logic: if diff is 9, 18, or 27, index will be 0 (Ati-Mitra)
+    let taraIndex = diff % 9;
+    const tara = taraData[taraIndex];
+    
+    const resDiv = document.getElementById('result');
+    resDiv.style.display = 'block';
+    
+    // This applies the .positive, .negative, or .neutral CSS class
+    resDiv.className = `result-box ${tara.type}`;
+    
+    document.getElementById('resultIcon').innerText = tara.icon;
+    document.getElementById('taraName').innerText = tara.name;
+    
+    // This renders the bolding and line breaks correctly
+    document.getElementById('taraDesc').innerHTML = tara.desc;
+    
+    resDiv.scrollIntoView({ behavior: 'smooth' });
+});
 
     document.getElementById("refreshBtn").addEventListener("click", fetchStar);
 
