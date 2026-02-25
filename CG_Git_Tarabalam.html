@@ -175,18 +175,79 @@ Don’ts: Avoid risky ventures, emotional confrontations, and overexertion." },
     ];
 
     const taraData = {
-      1: { name: "Janma Tara", type: "neutral", icon: "⚠️", desc: `This is your Moon’s birth Nakshatra and represents your mind, health, and core life experiences. Results are deeply personal and strongly felt, influencing emotional balance and vitality.
-Do’s: Focus on self-care, health routines, reflection, and spiritual practices.
-Don’ts: Avoid risky ventures, emotional confrontations, and overexertion.` },
-      2: { name: "Sampat Tara", type: "good", icon: "💰", desc: "Wealth & Success. Very lucky!" },
-      3: { name: "Vipat Tara", type: "bad", icon: "⛔", desc: "Obstacles. Be cautious today." },
-      4: { name: "Kshema Tara", type: "good", icon: "🛡️", desc: "Safe & Secure. Good for family." },
-      5: { name: "Pratyari Tara", type: "bad", icon: "🚧", desc: "Opposition. Stay patient." },
-      6: { name: "Sadhana Tara", type: "good", icon: "🎯", desc: "Achievement. Great for goals!" },
-      7: { name: "Naidhana Tara", type: "bad", icon: "⚠️", desc: "Highly Cautionary. Rest today." },
-      8: { name: "Mitra Tara", type: "good", icon: "👥", desc: "Friendly Day. Good for social events." },
-      0: { name: "Ati-Mitra Tara", type: "good", icon: "⭐", desc: "Highly auspicious! Best friend day." }
-    };
+    1: { 
+        name: "Janma Tara", 
+        type: "neutral", 
+        icon: "⚠️", 
+        desc: `This is your Moon’s birth Nakshatra and represents your mind, health, and core life experiences. Results are deeply personal and strongly felt.<br><br>
+        <b>Do’s:</b> Focus on self-care, health routines, reflection, and spiritual practices.<br>
+        <b>Don’ts:</b> Avoid risky ventures, emotional confrontations, and overexertion.` 
+    },
+    2: { 
+        name: "Sampat Tara", 
+        type: "positive", 
+        icon: "💰", 
+        desc: `The "Wealth" star. This period brings prosperity, financial gains, and material comfort. It is highly auspicious for new beginnings.<br><br>
+        <b>Do’s:</b> Invest money, start new business ventures, and sign important contracts.<br>
+        <b>Don’ts:</b> Avoid being pessimistic or letting profitable opportunities slip away.` 
+    },
+    3: { 
+        name: "Vipat Tara", 
+        type: "negative", 
+        icon: "🚫", 
+        desc: `The "Danger" star. This period can bring unexpected hurdles, mishaps, or a sense of unease. Caution is the keyword here.<br><br>
+        <b>Do’s:</b> Maintain a low profile, double-check your work, and practice patience.<br>
+        <b>Don’ts:</b> Avoid major travel, surgery, or starting high-stakes projects.` 
+    },
+    4: { 
+        name: "Kshema Tara", 
+        type: "positive", 
+        icon: "🛡️", 
+        desc: `The "Well-being" star. This brings protection, comfort, and steady progress. It’s a great time for family and home life.<br><br>
+        <b>Do’s:</b> Reconnect with family, buy household items, and focus on long-term security.<br>
+        <b>Don’ts:</b> Avoid neglect of duties or taking your current stability for granted.` 
+    },
+    5: { 
+        name: "Pratyari Tara", 
+        type: "negative", 
+        icon: "⚔️", 
+        desc: `The "Opposition" star. You may face obstacles, enemies, or disagreements. It’s a time when others might challenge your authority.<br><br>
+        <b>Do’s:</b> Practice diplomacy, keep your secrets safe, and stay calm under pressure.<br>
+        <b>Don’ts:</b> Avoid unnecessary arguments or making new enemies.` 
+    },
+    6: { 
+        name: "Sadhaka Tara", 
+        type: "positive", 
+        icon: "🎯", 
+        desc: `The "Success" star. This is one of the most powerful Taras for achieving goals and gaining spiritual insights.<br><br>
+        <b>Do’s:</b> Focus on difficult tasks, meditate, and push for the final completion of projects.<br>
+        <b>Don’ts:</b> Avoid laziness; the energy of this star rewards effort and focus.` 
+    },
+    7: { 
+        name: "Vadha Tara", 
+        type: "negative", 
+        icon: "💀", 
+        desc: `The "Danger to Life" star. This is traditionally considered the most difficult Tara. It represents extreme obstacles and exhaustion.<br><br>
+        <b>Do’s:</b> Rest, perform spiritual protection practices, and avoid all major risks.<br>
+        <b>Don’ts:</b> Do NOT start anything of vital importance. Avoid major life changes today.` 
+    },
+    8: { 
+        name: "Mitra Tara", 
+        type: "positive", 
+        icon: "🤝", 
+        desc: `The "Friend" star. This brings harmony, social success, and pleasant interactions. A great time for networking.<br><br>
+        <b>Do’s:</b> Meet friends, ask for favors, and engage in social gatherings.<br>
+        <b>Don’ts:</b> Avoid isolation; you will find your best results through cooperation.` 
+    },
+    9: { 
+        name: "Ati-Mitra Tara", 
+        type: "positive", 
+        icon: "🌟", 
+        desc: `The "Great Friend" star. This brings exceptional support and deep happiness. It is a highly beneficial and lucky period.<br><br>
+        <b>Do’s:</b> Launch your most important ideas, seek mentorship, and express gratitude.<br>
+        <b>Don’ts:</b> Avoid being arrogant; stay humble to keep this positive flow moving.` 
+    }
+};
 
     let currentStarIndex = null;
 
@@ -207,34 +268,25 @@ Don’ts: Avoid risky ventures, emotional confrontations, and overexertion.` },
     try {
         statusText.innerText = "Syncing with Sky Data...";
         
-        // Dynamic Date & Time for accurate results (IST)
-        const now = new Date();
-        const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-        const apiURL = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Time=${timeStr}&Latitude=23.17&Longitude=75.78&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
+        // 1. Define the actual API URL
+        const apiURL = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=25/02/2026&Time=16:00&Latitude=23.17&Longitude=75.78&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
         
-        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`);
+        // 2. Wrap it in a reliable proxy (corsproxy.io is a great alternative)
+        const proxyURL = `https://corsproxy.io/?${encodeURIComponent(apiURL)}`;
+
+        // 3. Perform the fetch using the proxyURL
+        const response = await fetch(proxyURL);
+        
         if (!response.ok) throw new Error("Network response was not ok");
         
-        const wrapper = await response.json();
-        const data = JSON.parse(wrapper.contents);
+        const data = await response.json();
         
-        // FIX: Check if MoonNakshatra actually exists before using .replace()
-        // VedAstro often returns an object: { Name: "Rohini", ... }
-        let rawStarName = "";
-        if (data.MoonNakshatra && typeof data.MoonNakshatra === 'object') {
-            rawStarName = data.MoonNakshatra.Name || "";
-        } else if (typeof data.MoonNakshatra === 'string') {
-            rawStarName = data.MoonNakshatra;
-        }
-
-        if (!rawStarName) throw new Error("Star data missing in API response");
-
-        const apiStarClean = rawStarName.replace(/\s/g, '').toLowerCase();
+        // 4. Extract and Clean the Star Name
+        // VedAstro usually returns MoonNakshatra.Name
+        let rawStar = data.MoonNakshatra?.Name || data.MoonNakshatra || "";
+        const apiStar = rawStar.replace(/\s/g, '').toLowerCase();
         
-        // Match with your local array
-        currentStarIndex = nakshatras.findIndex(s => apiStarClean.includes(s.toLowerCase()));
+        currentStarIndex = nakshatras.findIndex(s => apiStar.includes(s.toLowerCase()));
 
         if (currentStarIndex !== -1) {
             starDisplay.innerText = nakshatras[currentStarIndex];
@@ -247,9 +299,8 @@ Don’ts: Avoid risky ventures, emotional confrontations, and overexertion.` },
         console.error("Fetch error:", error);
         statusText.innerText = "✖ Connection Busy. Using Default Sky.";
         
-        // Logic Fallback: Instead of a hardcoded 10, 
-        // you could set this to a known value for today
-        currentStarIndex = 4; // 4 is Mrigashira (0-indexed: 0-Ashwini... 4-Mrigashira)
+        // Fallback to Mrigashira (Index 4) for Feb 25th 4:00 PM
+        currentStarIndex = 4; 
         starDisplay.innerText = nakshatras[currentStarIndex] + " (Est.)";
     }
 }
