@@ -197,45 +197,58 @@
 
     // 2. Robust API Call with Fallback
     async function fetchStar() {
-        const statusText = document.getElementById('statusText');
-        const starDisplay = document.getElementById("todayStarDisplay");
+    const statusText = document.getElementById('statusText');
+    const starDisplay = document.getElementById("todayStarDisplay");
+    
+    try {
+        statusText.innerText = "Syncing with Sky Data...";
         
-        try {
-            statusText.innerText = "Syncing with Sky Data...";
-            
-            // Using a cleaner Proxy approach
-            const apiURL = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=25/02/2026&Time=15:30&Latitude=23.17&Longitude=75.78&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
-            const proxyURL = `https://cors-anywhere.herokuapp.com/${apiURL}`; 
+        // Dynamic Date & Time for accurate results (IST)
+        const now = new Date();
+        const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-          console.log("Debug variable:", yourVariableName);
-            
-            // Try fetching from a public reliable proxy or directly
-            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`);
-            
-            if (!response.ok) throw new Error("Network response was not ok");
-            
-            const wrapper = await response.json();
-            const data = JSON.parse(wrapper.contents);
-            
-            // Match the star name from API to our list
-            const apiStar = data.MoonNakshatra.replace(/\s/g, '').toLowerCase();
-            currentStarIndex = nakshatras.findIndex(s => apiStar.includes(s.toLowerCase()));
-
-            if (currentStarIndex !== -1) {
-                starDisplay.innerText = nakshatras[currentStarIndex];
-                statusText.innerText = "✓ Connected to Sky Data";
-            } else {
-                throw new Error("Star mapping failed");
-            }
-
-        } catch (error) {
-            console.error("Fetch error:", error);
-            statusText.innerText = "✖ Connection Busy. Using Default Sky.";
-            // Fallback: If API fails, we set a default so the user can still use the app
-            currentStarIndex = 10; // Defaulting to Magha for now
-            starDisplay.innerText = nakshatras[currentStarIndex] + " (Est.)";
+        const apiURL = `https://api.vedastro.org/api/PanchangInfo/GetPanchangData?Date=${dateStr}&Time=${timeStr}&Latitude=23.17&Longitude=75.78&TimeZoneOffset=+05:30&Ayanamsha=Lahiri`;
+        
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`);
+        if (!response.ok) throw new Error("Network response was not ok");
+        
+        const wrapper = await response.json();
+        const data = JSON.parse(wrapper.contents);
+        
+        // FIX: Check if MoonNakshatra actually exists before using .replace()
+        // VedAstro often returns an object: { Name: "Rohini", ... }
+        let rawStarName = "";
+        if (data.MoonNakshatra && typeof data.MoonNakshatra === 'object') {
+            rawStarName = data.MoonNakshatra.Name || "";
+        } else if (typeof data.MoonNakshatra === 'string') {
+            rawStarName = data.MoonNakshatra;
         }
+
+        if (!rawStarName) throw new Error("Star data missing in API response");
+
+        const apiStarClean = rawStarName.replace(/\s/g, '').toLowerCase();
+        
+        // Match with your local array
+        currentStarIndex = nakshatras.findIndex(s => apiStarClean.includes(s.toLowerCase()));
+
+        if (currentStarIndex !== -1) {
+            starDisplay.innerText = nakshatras[currentStarIndex];
+            statusText.innerText = "✓ Connected to Sky Data";
+        } else {
+            throw new Error("Star mapping failed");
+        }
+
+    } catch (error) {
+        console.error("Fetch error:", error);
+        statusText.innerText = "✖ Connection Busy. Using Default Sky.";
+        
+        // Logic Fallback: Instead of a hardcoded 10, 
+        // you could set this to a known value for today
+        currentStarIndex = 4; // 4 is Mrigashira (0-indexed: 0-Ashwini... 4-Mrigashira)
+        starDisplay.innerText = nakshatras[currentStarIndex] + " (Est.)";
     }
+}
 
     // 3. Calculation Logic
     document.getElementById("checkBtn").addEventListener("click", () => {
